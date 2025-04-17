@@ -1,77 +1,127 @@
 import { Router } from "express";
-import { z } from "zod";
 import { PrismaClient } from "@prisma/client";
+import { z } from "zod";
 import multer from "multer";
-import { CloudinaryStorage } from "multer-storage-cloudinary";
 import { v2 as cloudinary } from "cloudinary";
+import { CloudinaryStorage } from "multer-storage-cloudinary";
 
 const prisma = new PrismaClient();
 const router = Router();
 
-const fotoSchema = z.object({
-  descricao: z.string(),
-  carroId: z.coerce.number(),
-});
-
-router.get("/", async (req, res) => {
-  try {
-    const fotos = await prisma.foto.findMany({
-      include: {
-        carro: true,
-      },
-    });
-    res.status(200).json(fotos);
-  } catch (error) {
-    res.status(500).json({ erro: error });
-  }
-});
-
 cloudinary.config({
-  cloud_name: "dunngnd9p",
-  api_key: "387524455223584",
-  api_secret: "8mR8-VyMzeCYd7EzLJWrSOeGpgA",
+  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+  api_key: process.env.CLOUDINARY_API_KEY,
+  api_secret: process.env.CLOUDINARY_API_SECRET,
 });
 
 const storage = new CloudinaryStorage({
-  cloudinary,
-  params: async (req, file) => {
-    return {
-      folder: "Revenda",
-      allowed_formats: ["jpg", "png", "jpeg"],
-      public_id: `${Date.now()}-${file.originalname.split(".")[0]}`,
-    };
-  },
+  cloudinary: cloudinary,
+  params: {
+    folder: "PetMatch",
+    allowed_formats: ["jpg", "jpeg", "png"],
+  } as any,
 });
 
-const upload = multer({ storage });
+const upload = multer({ storage: storage });
 
-router.post("/", upload.single("image"), async (req, res) => {
-  const valida = fotoSchema.safeParse(req.body);
+const fotoSchema = z.object({
+  petId: z.number().int().positive(),
+  isCapa: z.boolean().default(false),
+});
 
-  if (!valida.success) {
-    res.status(400).json({ erro: valida.error });
-    return;
-  }
-
-  if (!req.file || !req.file.path) {
-    res.status(400).json({ erro: "Erro ao fazer upload da imagem" });
-    return;
-  }
-
-  const { descricao, carroId } = valida.data;
-  const { path } = req.file;
-
+router.get("/:petId", async (req, res) => {
   try {
+    const { petId } = req.params;
+    const fotos = await prisma.foto.findMany({
+      where: { petId: Number(petId) },
+    });
+    res.status(200).json(fotos);
+  } catch (error) {
+    res.status(500).json({ error: "Erro ao buscar fotos" });
+  }
+});
+
+router.post("/", upload.single("foto"), async (req, res) => {
+  try {
+    const { petId, isCapa } = fotoSchema.parse(JSON.parse(req.body.data));
+    const image = (req.file as any).path;
+
     const foto = await prisma.foto.create({
       data: {
-        descricao,
-        carroId,
-        url: path,
+        url: image,
+        petId: petId,
       },
     });
+
+    if (isCapa) {
+      await prisma.pet.update({
+        where: { id: petId },
+        data: { fotoCapaId: foto.id },
+      });
+    }
+
     res.status(201).json(foto);
   } catch (error) {
-    res.status(400).json({ error });
+    if (error instanceof z.ZodError) {
+      return res.status(400).json({ error: error.errors });
+    }
+    res.status(500).json({ error: "Erro ao fazer upload da foto" });
+  }
+});
+
+router.patch("/:id/capa", async (req, res) => {
+  try {
+    const { id } = req.params;
+    const foto = await prisma.foto.findUnique({
+      where: { id: Number(id) },
+    });
+
+    if (!foto) {
+      return res.status(404).json({ error: "Foto não encontrada" });
+    }
+
+    await prisma.pet.update({
+      where: { id: foto.petId },
+      data: { fotoCapaId: Number(id) },
+    });
+
+    res.status(200).json({ message: "Foto definida como capa com sucesso" });
+  } catch (error) {
+    res.status(500).json({ error: "Erro ao definir foto como capa" });
+  }
+});
+
+router.delete("/:id", async (req, res) => {
+  try {
+    const { id } = req.params;
+    const foto = await prisma.foto.findUnique({
+      where: { id: Number(id) },
+      include: { petFotoCapa: true },
+    });
+
+    if (!foto) {
+      return res.status(404).json({ error: "Foto não encontrada" });
+    }
+
+    if (foto.petFotoCapa) {
+      await prisma.pet.update({
+        where: { id: foto.petFotoCapa.id },
+        data: { fotoCapaId: null },
+      });
+    }
+
+    const publicId = foto.url.split("/").pop()?.split(".")[0];
+    if (publicId) {
+      await cloudinary.uploader.destroy(`petmatch/${publicId}`);
+    }
+
+    await prisma.foto.delete({
+      where: { id: Number(id) },
+    });
+
+    res.status(204).send();
+  } catch (error) {
+    res.status(500).json({ error: "Erro ao deletar foto" });
   }
 });
 

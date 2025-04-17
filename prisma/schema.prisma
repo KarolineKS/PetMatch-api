@@ -29,6 +29,8 @@ model Pet {
   ong             Ong      @relation(fields: [ongId], references: [id])
   ongId           Int
   fotos           Foto[]
+  fotoCapa        Foto?    @relation("FotoCapa", fields: [fotoCapaId], references: [id])
+  fotoCapaId      Int?     @unique
   descricao       String?  @db.Text
   cor             String   @db.VarChar(30)
   raca            Raca     @relation(fields: [racaId], references: [id])
@@ -46,10 +48,12 @@ model Pet {
 }
 
 model Foto {
-  id    Int    @id @default(autoincrement())
-  url   String @db.VarChar(255)
-  pet   Pet    @relation(fields: [petId], references: [id])
-  petId Int
+  id              Int      @id @default(autoincrement())
+  url             String   @db.VarChar(255)
+  pet             Pet      @relation(fields: [petId], references: [id])
+  petId           Int
+  petFotoCapa     Pet?     @relation("FotoCapa")
+  createdAt       DateTime @default(now())
 
   @@map("fotos")
 }
