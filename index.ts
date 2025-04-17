@@ -4,7 +4,7 @@ import routesPets from "./routes/pets";
 import routesFotos from "./routes/fotos";
 
 const app = express();
-const port = 3010;
+const port = 3001;
 
 app.use(express.json());
 app.use(cors());
