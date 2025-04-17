@@ -23,17 +23,21 @@ model Raca {
 
 model Pet {
   id              Int      @id @default(autoincrement())
-  nome            String   @db.VarChar(30)
-  idade           Int      @db.SmallInt
+  nome            String   @db.VarChar(50)
+  especie         String   @db.VarChar(20)
+  idade           String   @db.VarChar(20)
   ong             Ong      @relation(fields: [ongId], references: [id])
   ongId           Int
-  foto            Foto[] 
-  caracteristicas String?
+  fotos           Foto[]
+  descricao       String?  @db.Text
   cor             String   @db.VarChar(30)
   raca            Raca     @relation(fields: [racaId], references: [id])
   racaId          Int
-  temperamento    String   @db.VarChar(30)
-  observacoes     String?
+  porte           Porte 
+  sexo            Sexo
+  castrado        Boolean  @default(false)
+  vacinado        Boolean  @default(false)
+  vermifugado     Boolean  @default(false)
   adotado         Boolean  @default(false)
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt()
@@ -64,4 +68,15 @@ model Ong {
   pets     Pet[]
 
   @@map("ongs")
+}
+
+enum Porte {
+  PEQUENO
+  MEDIO
+  GRANDE
+}
+
+enum Sexo {
+  MACHO
+  FEMEA
 }
