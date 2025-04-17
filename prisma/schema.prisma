@@ -1,0 +1,67 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgres"
+  url      = env("DATABASE_URL")
+}
+
+model Raca {
+  id   Int    @id @default(autoincrement())
+  nome String @db.VarChar(30)
+  pets Pet[]
+
+  @@map("racas")
+}
+
+model Pet {
+  id              Int      @id @default(autoincrement())
+  nome            String   @db.VarChar(30)
+  idade           Int      @db.SmallInt
+  ong             Ong      @relation(fields: [ongId], references: [id])
+  ongId           Int
+  foto            Foto[] 
+  caracteristicas String?
+  cor             String   @db.VarChar(30)
+  raca            Raca     @relation(fields: [racaId], references: [id])
+  racaId          Int
+  temperamento    String   @db.VarChar(30)
+  observacoes     String?
+  adotado         Boolean  @default(false)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt()
+
+  @@map("pets")
+}
+
+model Foto {
+  id    Int    @id @default(autoincrement())
+  url   String @db.VarChar(255)
+  pet   Pet    @relation(fields: [petId], references: [id])
+  petId Int
+
+  @@map("fotos")
+}
+
+model Ong {
+  id       Int     @id @default(autoincrement())
+  nome     String  @db.VarChar(30)
+  cnpj     String  @db.VarChar(14)
+  telefone String? @db.VarChar(11)
+  email    String? @db.VarChar(50)
+  site     String? @db.VarChar(50)
+  endereco String? @db.VarChar(100)
+  cidade   String? @db.VarChar(50)
+  estado   String? @db.VarChar(2)
+  cep      String? @db.VarChar(8)
+  pets     Pet[]
+
+  @@map("ongs")
+}
