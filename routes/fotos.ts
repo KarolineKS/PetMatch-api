@@ -15,11 +15,14 @@ cloudinary.config({
 });
 
 const storage = new CloudinaryStorage({
-  cloudinary: cloudinary,
-  params: {
-    folder: "PetMatch",
-    allowed_formats: ["jpg", "jpeg", "png"],
-  } as any,
+  cloudinary,
+  params: async (req, file) => {
+    return {
+      folder: "PetMatch",
+      allowed_formats: ["jpg", "png", "jpeg"],
+      public_id: `${Date.now()}-${file.originalname.split(".")[0]}`,
+    };
+  },
 });
 
 const upload = multer({ storage: storage });
@@ -41,27 +44,40 @@ router.get("/:petId", async (req, res) => {
   }
 });
 
-router.post("/", upload.single("foto"), async (req, res) => {
+router.post("/", upload.single("image"), async (req, res) => {
   try {
-    const { petId, isCapa } = fotoSchema.parse(JSON.parse(req.body.data));
-    const image = (req.file as any).path;
+    if (!req.file) {
+      return res.status(400).json({ error: "Arquivo não encontrado" });
+    }
+
+    const petId = parseInt(req.body.petId);
+    const isCapa = req.body.isCapa;
+
+    const validatedData = fotoSchema.parse({ petId, isCapa });
+    const imageUrl = req.file.path;
+
+    console.log("Dados:", { petId, isCapa, imageUrl });
 
     const foto = await prisma.foto.create({
       data: {
-        url: image,
-        petId: petId,
+        url: imageUrl,
+        petId: validatedData.petId,
+      },
+      include: {
+        pet: true,
       },
     });
 
-    if (isCapa) {
+    if (validatedData.isCapa) {
       await prisma.pet.update({
-        where: { id: petId },
+        where: { id: validatedData.petId },
         data: { fotoCapaId: foto.id },
       });
     }
 
     res.status(201).json(foto);
   } catch (error) {
+    console.error("Erro ao criar foto:", error);
     if (error instanceof z.ZodError) {
       return res.status(400).json({ error: error.errors });
     }

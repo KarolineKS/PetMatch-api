@@ -15,7 +15,6 @@ async function main() {
     },
   });
 
-
   const ong = await prisma.ong.create({
     data: {
       nome: "Amigos dos Pets",
@@ -26,7 +25,6 @@ async function main() {
       estado: "SC",
     },
   });
-
 
   const pets = await Promise.all([
     prisma.pet.create({
@@ -79,7 +77,51 @@ async function main() {
     }),
   ]);
 
-  console.log("Dados inseridos com sucesso!");
+  // Adicionando fotos para a Luna
+  const fotosLuna = await Promise.all([
+    prisma.foto.create({
+      data: {
+        url: "https://res.cloudinary.com/dunngnd9p/image/upload/v1/PetMatch/gato-siames1.jpg",
+        petId: pets[0].id,
+      },
+    }),
+    prisma.foto.create({
+      data: {
+        url: "https://res.cloudinary.com/dunngnd9p/image/upload/v1/PetMatch/gato-siames2.jpg",
+        petId: pets[0].id,
+      },
+    }),
+  ]);
+
+  // Definindo foto de capa para Luna
+  await prisma.pet.update({
+    where: { id: pets[0].id },
+    data: { fotoCapaId: fotosLuna[0].id },
+  });
+
+  // Adicionando fotos para o Thor
+  const fotosThor = await Promise.all([
+    prisma.foto.create({
+      data: {
+        url: "https://res.cloudinary.com/dunngnd9p/image/upload/v1/PetMatch/cachorro-caramelo1.jpg",
+        petId: pets[1].id,
+      },
+    }),
+    prisma.foto.create({
+      data: {
+        url: "https://res.cloudinary.com/dunngnd9p/image/upload/v1/PetMatch/cachorro-caramelo2.jpg",
+        petId: pets[1].id,
+      },
+    }),
+  ]);
+
+  // Definindo foto de capa para Thor
+  await prisma.pet.update({
+    where: { id: pets[1].id },
+    data: { fotoCapaId: fotosThor[0].id },
+  });
+
+  console.log("Dados e fotos inseridos com sucesso!");
 }
 
 main()

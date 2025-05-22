@@ -55,6 +55,7 @@ router.get("/", async (req, res) => {
         ong: true,
         raca: true,
         fotos: true,
+        fotoCapa: true,
       },
     });
     res.status(200).json(pets);
@@ -220,6 +221,7 @@ router.get("/:id", async (req, res) => {
         ong: true,
         raca: true,
         fotos: true,
+        fotoCapa: true,
       },
     });
     res.status(200).json(pet);
