@@ -43,6 +43,7 @@ model Pet {
   adotado         Boolean  @default(false)
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt()
+  visitas         Visita[]
 
   @@map("pets")
 }
@@ -73,6 +74,30 @@ model Ong {
 
   @@map("ongs")
 }
+
+model Cliente {
+  id            String   @db.VarChar(36) @id @default(uuid())
+  nome          String   @db.VarChar(60)
+  email         String   @db.VarChar(40)
+  senha         String   @db.VarChar(60)   // senha deve ser varchar(60)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt  
+  visita        Visita[]
+  @@map("clientes")
+}
+
+model Visita {
+  id        String   @db.VarChar(36) @id @default(uuid())
+  cliente   Cliente  @relation(fields: [clienteId], references: [id])
+  clienteId String
+  pet       Pet      @relation(fields: [petId], references: [id])
+  petId     Int
+  data      DateTime @default(now())
+  local     String   @db.VarChar(100)
+  status    String   @db.VarChar(20)
+  @@map("visitas")
+}
+
 
 enum Porte {
   PEQUENO
