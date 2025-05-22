@@ -56,8 +56,6 @@ router.post("/", upload.single("image"), async (req, res) => {
     const validatedData = fotoSchema.parse({ petId, isCapa });
     const imageUrl = req.file.path;
 
-    console.log("Dados:", { petId, isCapa, imageUrl });
-
     const foto = await prisma.foto.create({
       data: {
         url: imageUrl,
