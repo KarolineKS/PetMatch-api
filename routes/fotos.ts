@@ -51,7 +51,7 @@ router.post("/", upload.single("image"), async (req, res) => {
     }
 
     const petId = parseInt(req.body.petId);
-    const isCapa = req.body.isCapa;
+    const isCapa = req.body.isCapa === "true" || req.body.isCapa === true;
 
     const validatedData = fotoSchema.parse({ petId, isCapa });
     const imageUrl = req.file.path;
