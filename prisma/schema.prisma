@@ -93,7 +93,7 @@ model Visita {
   pet       Pet      @relation(fields: [petId], references: [id])
   petId     Int
   data      DateTime @default(now())
-  local     String   @db.VarChar(100)
+  horario   String   @db.VarChar(20)
   status    String   @db.VarChar(20)
   @@map("visitas")
 }
