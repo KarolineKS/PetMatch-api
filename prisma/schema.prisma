@@ -22,82 +22,185 @@ model Raca {
 }
 
 model Pet {
-  id              Int      @id @default(autoincrement())
-  nome            String   @db.VarChar(50)
-  especie         String   @db.VarChar(20)
-  idade           String   @db.VarChar(20)
-  ong             Ong      @relation(fields: [ongId], references: [id])
-  ongId           Int
-  fotos           Foto[]
-  fotoCapa        Foto?    @relation("FotoCapa", fields: [fotoCapaId], references: [id])
-  fotoCapaId      Int?     @unique
-  descricao       String?  @db.Text
-  cor             String   @db.VarChar(30)
-  raca            Raca     @relation(fields: [racaId], references: [id])
-  racaId          Int
-  porte           Porte 
-  sexo            Sexo
-  castrado        Boolean  @default(false)
-  vacinado        Boolean  @default(false)
-  vermifugado     Boolean  @default(false)
-  adotado         Boolean  @default(false)
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt()
-  visitas         Visita[]
+  id          Int      @id @default(autoincrement())
+  nome        String   @db.VarChar(50)
+  especie     String   @db.VarChar(20)
+  idade       String   @db.VarChar(20)
+  ong         Ong      @relation(fields: [ongId], references: [id])
+  ongId       Int
+  fotos       Foto[]
+  fotoCapa    Foto?    @relation("FotoCapa", fields: [fotoCapaId], references: [id])
+  fotoCapaId  Int?     @unique
+  descricao   String?  @db.Text
+  cor         String   @db.VarChar(30)
+  raca        Raca     @relation(fields: [racaId], references: [id])
+  racaId      Int
+  porte       Porte
+  sexo        Sexo
+  castrado    Boolean  @default(false)
+  vacinado    Boolean  @default(false)
+  vermifugado Boolean  @default(false)
+  adotado     Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt()
+  visitas     Visita[]
+  curtidas    Curtida[]
+  matches     Match[]
+  admin       Admin?   @relation(fields: [adminId], references: [id])
+  adminId     String?
 
   @@map("pets")
 }
 
 model Foto {
-  id              Int      @id @default(autoincrement())
-  url             String   @db.VarChar(255)
-  pet             Pet      @relation(fields: [petId], references: [id])
-  petId           Int
-  petFotoCapa     Pet?     @relation("FotoCapa")
-  createdAt       DateTime @default(now())
+  id          Int      @id @default(autoincrement())
+  url         String   @db.VarChar(255)
+  pet         Pet      @relation(fields: [petId], references: [id])
+  petId       Int
+  petFotoCapa Pet?     @relation("FotoCapa")
+  createdAt   DateTime @default(now())
 
   @@map("fotos")
 }
 
 model Ong {
-  id       Int     @id @default(autoincrement())
-  nome     String  @db.VarChar(30)
-  cnpj     String  @db.VarChar(14)
-  telefone String? @db.VarChar(11)
-  email    String? @db.VarChar(50)
-  site     String? @db.VarChar(50)
-  endereco String? @db.VarChar(100)
-  cidade   String? @db.VarChar(50)
-  estado   String? @db.VarChar(2)
-  cep      String? @db.VarChar(8)
-  pets     Pet[]
+  id                     Int                     @id @default(autoincrement())
+  nome                   String                  @db.VarChar(30)
+  cnpj                   String                  @db.VarChar(14)
+  telefone               String?                 @db.VarChar(11)
+  email                  String?                 @db.VarChar(50)
+  site                   String?                 @db.VarChar(50)
+  endereco               String?                 @db.VarChar(100)
+  cidade                 String?                 @db.VarChar(50)
+  estado                 String?                 @db.VarChar(2)
+  cep                    String?                 @db.VarChar(8)
+  pets                   Pet[]
+  admin                  Admin?                  @relation(fields: [adminId], references: [id])
+  adminId                String?
+  horariosFuncionamento  HorarioFuncionamento[]
+  excecoesHorario        ExcecaoHorario[]
 
   @@map("ongs")
 }
 
 model Cliente {
-  id            String   @db.VarChar(36) @id @default(uuid())
-  nome          String   @db.VarChar(60)
-  email         String   @db.VarChar(40)
-  senha         String   @db.VarChar(60)   // senha deve ser varchar(60)
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt  
-  visita        Visita[]
+  id        String    @id @default(uuid()) @db.VarChar(36)
+  nome      String    @db.VarChar(60)
+  email     String    @db.VarChar(40)
+  senha     String    @db.VarChar(60) // senha deve ser varchar(60)
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  visita    Visita[]
+  curtidas  Curtida[]
+  matches   Match[]
+
   @@map("clientes")
 }
 
 model Visita {
-  id        String   @db.VarChar(36) @id @default(uuid())
-  cliente   Cliente  @relation(fields: [clienteId], references: [id])
+  id        String       @id @default(uuid()) @db.VarChar(36)
+  cliente   Cliente      @relation(fields: [clienteId], references: [id])
   clienteId String
-  pet       Pet      @relation(fields: [petId], references: [id])
+  pet       Pet          @relation(fields: [petId], references: [id])
   petId     Int
-  data      DateTime @default(now())
-  horario   String   @db.VarChar(20)
-  status    String   @db.VarChar(20)
+  data      DateTime     @default(now())
+  horario   String       @db.VarChar(20)
+  status    StatusVisita @default(PENDENTE)
+  admin     Admin?       @relation(fields: [adminId], references: [id])
+  adminId   String?
+
   @@map("visitas")
 }
 
+model Admin {
+  id        String   @id @default(uuid()) @db.VarChar(36)
+  nome      String   @db.VarChar(60)
+  email     String   @db.VarChar(40)
+  senha     String   @db.VarChar(60) // senha deve ser varchar(60)
+  nivel     Int      @default(2) @db.SmallInt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  pets      Pet[]
+  visitas   Visita[]
+  ongs      Ong[]
+
+  @@map("admins")
+}
+
+model Curtida {
+  id        String      @id @default(uuid()) @db.VarChar(36)
+  cliente   Cliente     @relation(fields: [clienteId], references: [id])
+  clienteId String
+  pet       Pet         @relation(fields: [petId], references: [id])
+  petId     Int
+  tipo      TipoCurtida
+  createdAt DateTime    @default(now())
+  updatedAt DateTime    @updatedAt
+
+  @@unique([clienteId, petId])
+  @@map("curtidas")
+}
+
+model Match {
+  id        String      @id @default(uuid()) @db.VarChar(36)
+  cliente   Cliente     @relation(fields: [clienteId], references: [id])
+  clienteId String
+  pet       Pet         @relation(fields: [petId], references: [id])
+  petId     Int
+  status    StatusMatch @default(ATIVO)
+  createdAt DateTime    @default(now())
+  updatedAt DateTime    @updatedAt
+
+  @@unique([clienteId, petId])
+  @@map("matches")
+}
+
+model HorarioFuncionamento {
+  id                    Int     @id @default(autoincrement())
+  ong                   Ong     @relation(fields: [ongId], references: [id])
+  ongId                 Int
+  diaSemana             Int     @db.SmallInt // 0=domingo, 6=sábado
+  horaInicio            String  @db.VarChar(5) // HH:MM
+  horaFim               String  @db.VarChar(5) // HH:MM
+  intervaloMinutos      Int     @default(30)
+  maxVisitasSimultaneas Int     @default(2)
+  ativo                 Boolean @default(true)
+  createdAt             DateTime @default(now())
+  updatedAt             DateTime @updatedAt
+
+  @@unique([ongId, diaSemana])
+  @@map("horarios_funcionamento")
+}
+
+model ExcecaoHorario {
+  id        Int      @id @default(autoincrement())
+  ong       Ong      @relation(fields: [ongId], references: [id])
+  ongId     Int
+  data      DateTime @db.Date
+  motivo    String   @db.VarChar(100)
+  ativo     Boolean  @default(true)
+  createdAt DateTime @default(now())
+
+  @@map("excecoes_horario")
+}
+
+enum TipoCurtida {
+  LIKE
+  DISLIKE
+}
+
+enum StatusMatch {
+  ATIVO
+  INATIVO
+  ADOTADO
+}
+
+enum StatusVisita {
+  PENDENTE
+  CONFIRMADA
+  CANCELADA
+  CONCLUIDA
+}
 
 enum Porte {
   PEQUENO
