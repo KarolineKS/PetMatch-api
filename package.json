@@ -6,7 +6,7 @@
   "scripts": {
     "dev": "ts-node-dev --respawn --transpile-only index.ts",
     "seed": "ts-node prisma/seed.ts",
-    "vercel-build": "npx prisma migrate deploy"
+    "vercel-build": "npx prisma migrate deploy",
     "postinstall": "prisma generate"
   },
   "prisma": {
